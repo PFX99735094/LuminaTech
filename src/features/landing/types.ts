@@ -26,7 +26,8 @@ export type AccentKey =
   | 'rose'
   | 'violet'
   | 'teal'
-  | 'orange';
+  | 'orange'
+  | 'fuchsia';
 
 export interface Project {
   id: string;

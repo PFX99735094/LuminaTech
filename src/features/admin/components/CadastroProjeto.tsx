@@ -10,7 +10,7 @@ const BNCC_AREAS: BnccArea[] = [
   'Matemática', 'Ciências', 'Física', 'Geografia', 'Artes',
   'Língua Portuguesa', 'História', 'Tecnologia', 'Robótica',
 ];
-const ACCENTS: AccentKey[] = ['amber', 'lime', 'cyan', 'rose', 'violet', 'teal', 'orange'];
+const ACCENTS: AccentKey[] = ['amber', 'lime', 'cyan', 'rose', 'violet', 'teal', 'orange', 'fuchsia'];
 const ILLUSTRATIONS: IllustrationKey[] = ['lixeira', 'carrinho', 'sensor', 'semaforo', 'jardim', 'piano'];
 
 const accentColors: Record<AccentKey, string> = {
@@ -21,6 +21,7 @@ const accentColors: Record<AccentKey, string> = {
   violet: 'bg-violet-spark',
   teal: 'bg-teal-spark',
   orange: 'bg-orange-spark',
+  fuchsia: 'bg-fuchsia-spark',
 };
 
 interface ProjetoForm {
