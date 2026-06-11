@@ -85,7 +85,7 @@ long medirDistancia() {
 const carrinho: ProjectDetails = {
   kind: 'arduino',
   inoFilename: 'carrinho_bluetooth.ino',
-  wiringImage: '/wiring/carrinho-robo.jpg',
+  wiringImage: '/wiring/carrinho-robo.png',
   wiringImageAlt: 'Foto real do carrinho: Arduino Uno, ponte H L298N, módulo HC-05 e motores DC montados no chassi.',
   wiringCaption: 'Chassi MDF com Arduino, L298N, HC-05 e 2 motores DC.',
   summary:
@@ -185,85 +185,10 @@ void parar() {
 `,
 };
 
-const braco: ProjectDetails = {
-  kind: 'mecanica',
-  inoFilename: 'braco_hidraulico_montagem.ino',
-  wiringImage: '/wiring/braco-hidraulico.jpg',
-  wiringImageAlt: 'Foto real do braço hidráulico montado: seringas mestres e escravas conectadas por mangueiras coloridas em uma base de madeira.',
-  wiringCaption: 'Braço hidráulico com 6 seringas e mangueiras coloridas.',
-  summary:
-    'Braço hidráulico feito com 6 seringas e água — sem eletricidade. As seringas P1/P2/P3 controlam as três articulações, transmitindo força pelo Princípio de Pascal.',
-  warnings: [
-    'Este projeto é 100% mecânico — não usa Arduino. A página traz o esquema de montagem em vez de código.',
-    'Pintar a estrutura com tinta acrílica depois de montada aumenta muito a durabilidade.',
-  ],
-  components: [
-    { id: 'seringas', name: '6x Seringas 20ml' },
-    { id: 'mangueira', name: 'Mangueira de silicone 1m' },
-    { id: 'madeira', name: 'Madeira compensada 6mm' },
-    { id: 'pregos', name: 'Pregos e parafusos pequenos' },
-    { id: 'agua', name: 'Água com corante' },
-  ],
-  connections: [
-    { from: 'Seringa mestre (P₁)', to: 'Seringa escrava · Base', label: 'Mangueira vermelha' },
-    { from: 'Seringa mestre (P₂)', to: 'Seringa escrava · Cotovelo', label: 'Mangueira azul' },
-    { from: 'Seringa mestre (P₃)', to: 'Seringa escrava · Garra', label: 'Mangueira amarela' },
-    { from: 'Ponto de pivot', to: 'Base de madeira', label: 'Parafuso M3' },
-    { from: 'Reservatório', to: 'Linha d\'água', label: 'Purgar bolhas' },
-  ],
-  setupSteps: [
-    'Recorte as peças da base e das articulações em MDF ou compensado conforme o gabarito incluso no plano de aula.',
-    'Fure as seringas e encaixe as mangueiras com cola quente para vedar.',
-    'Pinte 3 seringas como "mestres" (com êmbolo) e 3 como "escravas" (sem êmbolo, fixas no braço).',
-    'Preencha todo o sistema com água corada e purgue bolhas de ar empurrando os êmbolos lentamente.',
-    'Teste empurrando a seringa mestre e observe o movimento sincronizado da escrava correspondente.',
-  ],
-  code: `// Braço Hidráulico — Lúmina Tech
-// Este projeto é puramente mecânico. O arquivo .ino é um guia de aula
-// com a lista de checagem para você imprimir e levar para a sala.
-
-const char planoDeAula[] PROGMEM = R"PLANO(
-  CHECKLIST DE MONTAGEM — BRAÇO HIDRÁULICO
-  =========================================
-  [ ] Base cortada em compensado 6mm
-  [ ] 3 seringas mestres com êmbolo
-  [ ] 3 seringas escravas sem êmbolo
-  [ ] 3 metros de mangueira silicone
-  [ ] 1L de água com corante
-  [ ] Cola quente + fita veda-rosca
-  [ ] Pregos 12mm e parafusos M3
-
-  ETAPA 1 — FIXAÇÃO
-    Marque os pontos de pivot conforme o gabarito.
-    Prenda a base e o cotovelo com parafusos M3.
-
-  ETAPA 2 — CIRCUITO HIDRÁULICO
-    Conecte P1 → Base, P2 → Cotovelo, P3 → Garra.
-
-  ETAPA 3 — PURGA
-    Empurre cada êmbolo até sair água sem bolhas.
-
-  ETAPA 4 — TESTE
-    Mova a seringa mestre 1cm e meça o deslocamento
-    da escrava. Razão esperada ≈ 1:1 (mesma seringa).
-)PLANO";
-
-void setup() {
-  Serial.begin(9600);
-  Serial.println("Braço Hidraulico — roteiro carregado.");
-  Serial.println(planoDeAula);
-}
-
-void loop() {
-  // nada — roteiro fica disponível no Monitor Serial
-}
-`,
-};
-
 const estacao: ProjectDetails = {
   kind: 'arduino',
   inoFilename: 'estacao_meteorologica.ino',
-  wiringImage: '/wiring/sensor-umidade.jpg',
+  wiringImage: '/wiring/sensor-umidade.png',
   wiringImageAlt: 'Foto real da estação: Arduino Nano com sensor DHT22 e display LCD 16x2 I2C ligados por jumpers.',
   wiringCaption: 'Arduino Nano + DHT22 + LCD 16x2 I2C em protoboard.',
   summary:
@@ -350,11 +275,417 @@ void loop() {
 `,
 };
 
+const semaforo: ProjectDetails = {
+  kind: 'arduino',
+  inoFilename: 'semaforo_inteligente.ino',
+  wiringImage: '/wiring/semaforo-inteligente.png',
+  wiringImageAlt: 'Arduino Uno com LEDs vermelho, amarelo e verde em protoboard e sensor PIR de presença.',
+  wiringCaption: 'Arduino Uno + 3 LEDs (R/Y/G) + Sensor PIR — semáforo com detecção de pedestres.',
+  summary:
+    'Semáforo que alterna LEDs vermelho, amarelo e verde em ciclo contínuo e encurta o tempo do verde quando o sensor PIR detecta um pedestre esperando.',
+  warnings: [
+    'Sempre use resistores de 220Ω em série com os LEDs para não queimá-los nem danificar as portas do Arduino.',
+    'O sensor PIR leva cerca de 30 segundos para se estabilizar após ligar. Durante esse período, pode disparar falsos positivos.',
+  ],
+  components: [
+    { id: 'arduino', name: 'Arduino Uno' },
+    { id: 'led-vermelho', name: 'LED Vermelho 5mm' },
+    { id: 'led-amarelo', name: 'LED Amarelo 5mm' },
+    { id: 'led-verde', name: 'LED Verde 5mm' },
+    { id: 'resistores', name: '3x Resistores 220Ω' },
+    { id: 'pir', name: 'Sensor PIR HC-SR501' },
+    { id: 'jumpers', name: 'Jumpers e protoboard' },
+  ],
+  connections: [
+    { from: 'LED Vermelho · Anodo', to: 'Arduino · D13 (→ 220Ω)', label: 'Vermelho' },
+    { from: 'LED Vermelho · Catodo', to: 'Arduino · GND', label: 'Preto' },
+    { from: 'LED Amarelo · Anodo', to: 'Arduino · D12 (→ 220Ω)', label: 'Amarelo' },
+    { from: 'LED Amarelo · Catodo', to: 'Arduino · GND', label: 'Preto' },
+    { from: 'LED Verde · Anodo', to: 'Arduino · D11 (→ 220Ω)', label: 'Verde' },
+    { from: 'LED Verde · Catodo', to: 'Arduino · GND', label: 'Preto' },
+    { from: 'PIR · VCC', to: 'Arduino · 5V', label: 'Vermelho' },
+    { from: 'PIR · GND', to: 'Arduino · GND', label: 'Preto' },
+    { from: 'PIR · OUT', to: 'Arduino · D10', label: 'Sinal' },
+  ],
+  setupSteps: [
+    'Conecte os 3 LEDs no protoboard: o anodo (perna longa) de cada LED vai aos pinos D13, D12 e D11 com resistores de 220Ω em série; o catodo (perna curta) vai ao GND.',
+    'Conecte o sensor PIR: VCC ao 5V, GND ao GND, OUT ao pino digital D10.',
+    'Carregue o código no Arduino e aguarde 30 segundos para o PIR estabilizar.',
+    'Abra o Monitor Serial em 9600 baud para ver o estado do semáforo e as detecções do PIR.',
+    'Aproxime a mão do PIR enquanto o LED verde estiver aceso e observe o ciclo encurtar.',
+  ],
+  extensions: [
+    'Adicione um buzzer no D8 para emitir um som intermitente quando o semáforo estiver vermelho — acessibilidade para deficientes visuais.',
+    'Substitua os LEDs por um módulo de semáforo com display de 7 segmentos para mostrar o tempo restante.',
+    'Use dois conjuntos de LEDs (R/Y/G) para simular um cruzamento completo com dois semáforos sincronizados.',
+  ],
+  code: `// Semáforo Inteligente — Lúmina Tech
+// Ciclo R-Y-G com detecção de pedestre via PIR
+
+const int ledRed = 13;
+const int ledYellow = 12;
+const int ledGreen = 11;
+const int pirPin = 10;
+
+const unsigned long greenNormal = 5000;
+const unsigned long greenCurto = 2000;
+const unsigned long yellowTime = 2000;
+const unsigned long redTime = 5000;
+
+void setup() {
+  pinMode(ledRed, OUTPUT);
+  pinMode(ledYellow, OUTPUT);
+  pinMode(ledGreen, OUTPUT);
+  pinMode(pirPin, INPUT);
+  Serial.begin(9600);
+  Serial.println("Semáforo inteligente pronto.");
+}
+
+void loop() {
+  unsigned long tempoVerde = greenNormal;
+
+  // Fase Verde — verifica se pedestre apareceu
+  digitalWrite(ledGreen, HIGH);
+  unsigned long inicio = millis();
+  while (millis() - inicio < tempoVerde) {
+    if (digitalRead(pirPin) == HIGH) {
+      tempoVerde = greenCurto;
+      Serial.println("Pedestre detectado! Encurtando verde.");
+    }
+  }
+  digitalWrite(ledGreen, LOW);
+
+  // Fase Amarela
+  digitalWrite(ledYellow, HIGH);
+  delay(yellowTime);
+  digitalWrite(ledYellow, LOW);
+
+  // Fase Vermelha
+  digitalWrite(ledRed, HIGH);
+  delay(redTime);
+  digitalWrite(ledRed, LOW);
+}
+`,
+};
+
+const controleGestos: ProjectDetails = {
+  kind: 'arduino',
+  inoFilename: 'controle_gestos.ino',
+  wiringImage: '/wiring/controle-gestos-mediapipe.png',
+  wiringImageAlt: 'Diagrama webcam + Python + Arduino Uno + 5 LEDs em protoboard.',
+  wiringCaption: 'PC com webcam → Python (MediaPipe) → Serial → Arduino → 5 LEDs.',
+  summary:
+    'Use a câmera do computador com MediaPipe Hands para detectar cada dedo estendido e acender o LED correspondente via Arduino.',
+  warnings: [
+    'Instale as bibliotecas Python: pip install opencv-python mediapipe pyserial. O OpenCV pode exigir a reinstalação manual do numpy se houver conflito.',
+    'Antes de rodar o Python, verifique a porta serial do Arduino (COM3, /dev/ttyUSB0 etc.) e ajuste no código.',
+    'Use LEDs de cores diferentes para facilitar a associação visual com cada dedo.',
+  ],
+  components: [
+    { id: 'arduino', name: 'Arduino Uno ou Nano' },
+    { id: 'leds', name: '5x LEDs (cores diferentes)' },
+    { id: 'resistores', name: '5x Resistores 220Ω' },
+    { id: 'protoboard', name: 'Protoboard + Jumpers' },
+    { id: 'webcam', name: 'Webcam USB' },
+  ],
+  connections: [
+    { from: 'LED1 · Anodo', to: 'Arduino · D3 (→ 220Ω)', label: 'Polegar' },
+    { from: 'LED1 · Catodo', to: 'Arduino · GND', label: 'GND' },
+    { from: 'LED2 · Anodo', to: 'Arduino · D4 (→ 220Ω)', label: 'Indicador' },
+    { from: 'LED2 · Catodo', to: 'Arduino · GND', label: 'GND' },
+    { from: 'LED3 · Anodo', to: 'Arduino · D5 (→ 220Ω)', label: 'Médio' },
+    { from: 'LED3 · Catodo', to: 'Arduino · GND', label: 'GND' },
+    { from: 'LED4 · Anodo', to: 'Arduino · D6 (→ 220Ω)', label: 'Anelar' },
+    { from: 'LED4 · Catodo', to: 'Arduino · GND', label: 'GND' },
+    { from: 'LED5 · Anodo', to: 'Arduino · D7 (→ 220Ω)', label: 'Mínimo' },
+    { from: 'LED5 · Catodo', to: 'Arduino · GND', label: 'GND' },
+  ],
+  setupSteps: [
+    'Monte os 5 LEDs no protoboard: o anodo (perna longa) de cada LED vai a um pino digital do Arduino com resistor de 220Ω em série; o catodo (perna curta) vai ao GND.',
+    'Carregue o código Arduino (controle_gestos.ino) na placa.',
+    'Abra o Monitor Serial da IDE para conferir se os números "00000" a "11111" aparecem quando os dedos são movidos — isso confirma a comunicação.',
+    'Instale as dependências Python: pip install opencv-python mediapipe pyserial numpy.',
+    'Ajuste a PORTA_SERIAL no script Python (ex.: COM3 no Windows, /dev/ttyUSB0 no Linux).',
+    'Execute o script Python com a webcam conectada. Posicione a mão na frente da câmera e veja os LEDs acenderem de acordo com os dedos estendidos.',
+  ],
+  extensions: [
+    'Adicione um buzzer para emitir um tom diferente para cada dedo.',
+    'Troque os LEDs por um display 7 segmentos para mostrar o número de dedos levantados (0–5).',
+    'Use PWM nos pinos para controlar a intensidade de cada LED conforme a distância entre falanges.',
+  ],
+  code: `// Controle por Gestos — Lúmina Tech
+// Arduino recebe string binária (5 chars) pelo Serial e acende LEDs
+
+const int pins[] = {3, 4, 5, 6, 7};
+
+void setup() {
+  for (int i = 0; i < 5; i++) {
+    pinMode(pins[i], OUTPUT);
+    digitalWrite(pins[i], LOW);
+  }
+  Serial.begin(9600);
+}
+
+void loop() {
+  if (Serial.available() >= 5) {
+    char buffer[6];
+    int len = Serial.readBytesUntil('\\n', buffer, 5);
+    buffer[len] = '\\0';
+
+    for (int i = 0; i < len && i < 5; i++) {
+      if (buffer[i] == '1') {
+        digitalWrite(pins[i], HIGH);
+      } else {
+        digitalWrite(pins[i], LOW);
+      }
+    }
+  }
+}
+
+// ============================================================
+//  PYTHON — controle_gestos.py  (roda no PC / Raspberry Pi)
+// ============================================================
+// Dependências: pip install opencv-python mediapipe pyserial numpy
+//
+// import cv2
+// import mediapipe as mp
+// import serial
+// import time
+//
+// PORTA_SERIAL = 'COM3'   # Ajuste conforme seu sistema
+// BAUDRATE = 9600
+//
+// arduino = serial.Serial(PORTA_SERIAL, BAUDRATE, timeout=0.1)
+// time.sleep(2)
+//
+// mp_hands = mp.solutions.hands
+// hands = mp_hands.Hands(
+//     static_image_mode=False,
+//     max_num_hands=1,
+//     min_detection_confidence=0.7,
+//     min_tracking_confidence=0.6,
+// )
+// mp_draw = mp.solutions.drawing_utils
+//
+// cap = cv2.VideoCapture(0)
+//
+// def dedos_estendidos(landmarks):
+//     """Retorna lista de 5 booleanos: [polegar, indicador, medio, anelar, minimo]"""
+//     dedos = []
+//
+//     # Polegar: compara x da ponta (4) com x da articulacao (3)
+//     dedos.append(landmarks[4].x > landmarks[3].x)
+//
+//     # Demais dedos: ponta (8,12,16,20) acima da articulacao PIP (6,10,14,18)
+//     for tip, pip in [(8, 6), (12, 10), (16, 14), (20, 18)]:
+//         dedos.append(landmarks[tip].y < landmarks[pip].y)
+//
+//     return dedos
+//
+// while cap.isOpened():
+//     ret, frame = cap.read()
+//     if not ret:
+//         break
+//
+//     frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+//     resultado = hands.process(frame_rgb)
+//
+//     estado = '00000'
+//
+//     if resultado.multi_hand_landmarks:
+//         for mao in resultado.multi_hand_landmarks:
+//             mp_draw.draw_landmarks(frame, mao, mp_hands.HAND_CONNECTIONS)
+//             dedos = dedos_estendidos(mao.landmark)
+//             estado = ''.join('1' if d else '0' for d in dedos)
+//
+//     arduino.write((estado + '\\n').encode())
+//
+//     cv2.putText(frame, f'Dedos: {estado}', (10, 30),
+//                 cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 0), 2)
+//     cv2.imshow('Controle por Gestos', frame)
+//
+//     if cv2.waitKey(1) & 0xFF == ord('q'):
+//         break
+//
+// cap.release()
+// cv2.destroyAllWindows()
+// arduino.close()
+`,
+};
+
+const jardim: ProjectDetails = {
+  kind: 'arduino',
+  inoFilename: 'jardim_automatico.ino',
+  wiringImage: '/wiring/jardim-automatico.png',
+  wiringImageAlt: 'Arduino Uno com sensor de umidade do solo FC-28 e módulo relé ligado a uma bomba d\'água.',
+  wiringCaption: 'Arduino Uno + Sensor de Umidade FC-28 + Relé + Bomba — irrigação automatizada.',
+  summary:
+    'Jardim que rega as plantas automaticamente: o sensor de umidade do solo FC-28 mede a resistência elétrica da terra; quando está seca, o Arduino aciona um relé que liga a bomba d\'água.',
+  warnings: [
+    'O sensor FC-28 pode oxidar com uso prolongado. Prefira o modelo capacitivo (v1.2) que dura mais.',
+    'A bomba d\'água deve ser alimentada por fonte externa (5V/2A ou 12V conforme o modelo). Nunca alimente a bomba diretamente pelo Arduino.',
+    'Faça o teste com a mão no sensor antes de colocar no vaso para calibrar o limiar de umidade no código.',
+  ],
+  components: [
+    { id: 'arduino', name: 'Arduino Uno' },
+    { id: 'sensor-solo', name: 'Sensor de Umidade FC-28' },
+    { id: 'rele', name: 'Módulo Relé 1 canal' },
+    { id: 'bomba', name: 'Bomba d\'água 5V ou 12V' },
+    { id: 'fonte', name: 'Fonte externa (conforme bomba)' },
+    { id: 'protoboard', name: 'Protoboard + Jumpers' },
+  ],
+  connections: [
+    { from: 'FC-28 · VCC', to: 'Arduino · 5V', label: 'Vermelho' },
+    { from: 'FC-28 · GND', to: 'Arduino · GND', label: 'Preto' },
+    { from: 'FC-28 · DO', to: 'Arduino · D7', label: 'Limiar (digital)' },
+    { from: 'FC-28 · AO', to: 'Arduino · A0', label: 'Sinal analógico' },
+    { from: 'Relé · VCC', to: 'Arduino · 5V', label: 'Vermelho' },
+    { from: 'Relé · GND', to: 'Arduino · GND', label: 'Preto' },
+    { from: 'Relé · IN', to: 'Arduino · D8', label: 'Sinal' },
+    { from: 'Bomba · V+', to: 'Fonte externa · V+', label: 'Vermelho' },
+    { from: 'Bomba · V-', to: 'Relé · COM', label: 'Preto' },
+    { from: 'Relé · NO', to: 'Fonte externa · GND', label: 'NA (normalmente aberto)' },
+  ],
+  setupSteps: [
+    'Conecte o sensor FC-28 ao Arduino: VCC no 5V, GND no GND, AO no A0 (leitura analógica) e DO no D7 (saída digital com trimpot).',
+    'Conecte o relé: VCC no 5V, GND no GND, IN no D8.',
+    'Alimente a bomba com fonte externa e interrompa o fio GND da bomba pelos contatos COM e NA do relé.',
+    'Carregue o código no Arduino e abra o Monitor Serial em 9600 baud.',
+    'Segure o sensor no ar (seco) e veja a leitura: úmido ~300, seco ~700+. Ajuste o LIMIAR_SECO no código conforme sua leitura.',
+    'Enfie o sensor na terra do vaso e veja a bomba ligar quando a terra secar.',
+  ],
+  extensions: [
+    'Adicione um display LCD 16x2 I2C para mostrar a leitura de umidade e o estado da bomba.',
+    'Coloque um botão entre D2 e GND para alternar entre modo automático e manual.',
+    'Use um sensor DHT22 para também monitorar temperatura e umidade do ar no jardim.',
+    'Adicione um segundo relé para controlar uma lâmpada de cultivo (grow light) ligada a um timer.',
+  ],
+  code: `// Jardim Automático — Lúmina Tech
+// Irrigação automática com sensor de umidade do solo FC-28
+
+const int pinoSensor = A0;
+const int pinoRele = 8;
+const int pinoDigital = 7;
+
+const int LIMIAR_SECO = 600;
+const unsigned long TEMPO_IRRIGACAO = 5000;
+const unsigned long INTERVALO_LEITURA = 2000;
+
+void setup() {
+  pinMode(pinoRele, OUTPUT);
+  pinMode(pinoDigital, INPUT);
+  digitalWrite(pinoRele, LOW);
+  Serial.begin(9600);
+  Serial.println("Jardim automatico pronto.");
+}
+
+void loop() {
+  int leitura = analogRead(pinoSensor);
+  bool secoDigital = digitalRead(pinoDigital) == LOW;
+
+  Serial.print("Umidade (analogico): ");
+  Serial.print(leitura);
+  Serial.print(" | Digital: ");
+  Serial.println(secoDigital ? "SECO" : "UMIDO");
+
+  if (leitura > LIMIAR_SECO && secoDigital) {
+    Serial.println("Solo seco! Ligando bomba...");
+    digitalWrite(pinoRele, HIGH);
+    delay(TEMPO_IRRIGACAO);
+    digitalWrite(pinoRele, LOW);
+    Serial.println("Irrigacao concluida.");
+  }
+
+  delay(INTERVALO_LEITURA);
+}
+`,
+};
+
+const piano: ProjectDetails = {
+  kind: 'arduino',
+  inoFilename: 'piano_arduino.ino',
+  wiringImage: '/wiring/piano-arduino.png',
+  wiringImageAlt: 'Arduino Uno com 5 botões tácteis e um buzzer piezo montados em protoboard.',
+  wiringCaption: 'Arduino Uno + 5 botões + Buzzer Piezo — piano eletrônico com 5 notas.',
+  summary:
+    'Piano eletrônico com 5 botões que reproduzem as notas Dó, Ré, Mi, Fá e Sol em um buzzer piezo. Cada botão aciona uma frequência diferente usando a função tone().',
+  warnings: [
+    'Use resistores de pull-down de 10kΩ em cada botão para evitar leituras flutuantes.',
+    'O buzzer piezo pode ser conectado diretamente ao pino digital, mas um resistor de 100Ω em série ajuda a limitar a corrente.',
+  ],
+  components: [
+    { id: 'arduino', name: 'Arduino Uno' },
+    { id: 'buzzer', name: 'Buzzer Piezo 5V' },
+    { id: 'botoes', name: '5x Botões Tácteis 6x6mm' },
+    { id: 'resistores', name: '5x Resistores 10kΩ (pull-down)' },
+    { id: 'protoboard', name: 'Protoboard + Jumpers' },
+  ],
+  connections: [
+    { from: 'Botão Dó · Terminal 1', to: 'Arduino · D2', label: 'Sinal' },
+    { from: 'Botão Dó · Terminal 2', to: 'Arduino · GND (→ 10kΩ)', label: 'Pull-down' },
+    { from: 'Botão Ré · Terminal 1', to: 'Arduino · D3', label: 'Sinal' },
+    { from: 'Botão Ré · Terminal 2', to: 'Arduino · GND (→ 10kΩ)', label: 'Pull-down' },
+    { from: 'Botão Mi · Terminal 1', to: 'Arduino · D4', label: 'Sinal' },
+    { from: 'Botão Mi · Terminal 2', to: 'Arduino · GND (→ 10kΩ)', label: 'Pull-down' },
+    { from: 'Botão Fá · Terminal 1', to: 'Arduino · D5', label: 'Sinal' },
+    { from: 'Botão Fá · Terminal 2', to: 'Arduino · GND (→ 10kΩ)', label: 'Pull-down' },
+    { from: 'Botão Sol · Terminal 1', to: 'Arduino · D6', label: 'Sinal' },
+    { from: 'Botão Sol · Terminal 2', to: 'Arduino · GND (→ 10kΩ)', label: 'Pull-down' },
+    { from: 'Buzzer · V+', to: 'Arduino · D9', label: 'Sinal PWM' },
+    { from: 'Buzzer · V-', to: 'Arduino · GND', label: 'Preto' },
+  ],
+  setupSteps: [
+    'Conecte os 5 botões no protoboard: cada botão tem um terminal ligado a um pino digital (D2–D6) e o outro terminal ao GND por um resistor de 10kΩ (pull-down).',
+    'Conecte o buzzer piezo: o pino positivo (mais longo) ao D9 e o negativo ao GND.',
+    'Carregue o código no Arduino e abra o Monitor Serial em 9600 baud.',
+    'Pressione cada botão e confira a nota tocada no buzzer.',
+  ],
+  extensions: [
+    'Adicione as notas Lá (440 Hz) e Si (494 Hz) com mais dois botões nos pinos D7 e D8 para uma escala completa.',
+    'Troque o buzzer por um mini alto-falante com transistor para ganhar volume.',
+    'Acenda um LED associado a cada nota usando pinos D10–D14 com resistores de 220Ω.',
+    'Grave uma melodia simples em um array e toque automaticamente ao ligar.',
+  ],
+  code: `// Piano com Botões — Lúmina Tech
+// 5 botões reproduzem Dó, Ré, Mi, Fá, Sol no buzzer piezo
+
+const int buzzer = 9;
+const int NUM_NOTAS = 5;
+const int botoes[NUM_NOTAS] = {2, 3, 4, 5, 6};
+const int notas[NUM_NOTAS] = {262, 294, 330, 349, 392};
+//                                Dó   Ré   Mi  Fá   Sol
+
+void setup() {
+  for (int i = 0; i < NUM_NOTAS; i++) {
+    pinMode(botoes[i], INPUT);
+  }
+  pinMode(buzzer, OUTPUT);
+  Serial.begin(9600);
+  Serial.println("Piano pronto! Pressione os botoes.");
+}
+
+void loop() {
+  for (int i = 0; i < NUM_NOTAS; i++) {
+    if (digitalRead(botoes[i]) == HIGH) {
+      tone(buzzer, notas[i]);
+      Serial.print("Tocando: ");
+      Serial.println(notas[i]);
+    }
+  }
+  delay(10); // pequeno debounce
+  noTone(buzzer);
+}
+`,
+};
+
 export const projectDetails: Record<string, ProjectDetails> = {
   'lixeira-inteligente': lixeira,
   'carrinho-robo': carrinho,
-  'braco-hidraulico': braco,
   'sensor-umidade': estacao,
+  'semaforo-inteligente': semaforo,
+  'jardim-automatico': jardim,
+  'piano-arduino': piano,
+  'controle-gestos-mediapipe': controleGestos,
 };
 
 export function hasProjectDetails(projectId: string): boolean {

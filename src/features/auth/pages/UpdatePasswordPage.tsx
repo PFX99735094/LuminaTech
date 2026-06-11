@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, Navigate } from 'react-router-dom';
 import { Cpu, Eye, EyeOff, KeyRound } from 'lucide-react';
-import { supabase } from '../../../lib/supabaseClient';
+import { supabaseAuth } from '../../../lib/supabaseClient';
 import { useAuth } from '../context/AuthContext';
 
 export function UpdatePasswordPage() {
@@ -22,7 +22,7 @@ export function UpdatePasswordPage() {
       return;
     }
 
-    const { error: err } = await supabase.auth.updateUser({ password });
+    const { error: err } = await supabaseAuth.updateUser({ password });
     if (err) {
       setError(err.message);
     } else {

@@ -8,14 +8,17 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
+        // Dark-first palette: "paper" is background (dark), "ink" is text (light)
         ink: {
-          900: '#070B14',
-          800: '#0E1424',
-          700: '#161D2F',
+          // Light neutrals for text on dark surfaces
+          900: '#E6ECF5',
+          800: '#C9D3E3',
+          700: '#9EACC2',
         },
         paper: {
-          50: '#F2F4F8',
-          100: '#E5E8EF',
+          // Deep, modern blue‑black surfaces
+          50: '#0B1020',
+          100: '#0F172A',
         },
         cyan: {
           spark: '#22D3EE',

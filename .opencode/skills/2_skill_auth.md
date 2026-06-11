@@ -133,9 +133,5 @@ No painel Supabase:
 - Script SQL idempotente (`supabase_setup.sql`) para tabela `profiles`, trigger e RLS
 - `AdminAuthContext` independente (nome + senha, localStorage) — admin não depende de Supabase
 
-### 🔜 Pendente (quando o Supabase estiver configurado)
-1. Definir `VITE_SUPABASE_URL` e `VITE_SUPABASE_ANON_KEY` no `.env`
-2. Executar `supabase_setup.sql` no SQL Editor do Supabase
-3. Habilitar Google OAuth no painel do Supabase
-4. Testar fluxo completo: cadastro → confirmação → login → logout
-5. Aplicar `ProtectedRoute` nas páginas internas (projetos, áreas restritas)
+### 🔜 Removido
+A funcionalidade de comunidade (fórum) foi removida. O foco é apenas no catálogo de projetos, autenticação de usuários e painel admin.

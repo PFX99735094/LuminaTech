@@ -23,6 +23,7 @@ export default function App() {
             <Route path="/projetos/:id" element={<ProjectDetailPage />} />
             <Route path="/admin/login" element={<AdminLoginPage />} />
             <Route path="/admin" element={<AdminPage />} />
+            {/** Rota de edição removida */}
             <Route path="/login" element={<LoginPage />} />
             <Route path="/auth/register" element={<RegisterPage />} />
             <Route path="/auth/recover" element={<RecoverPasswordPage />} />

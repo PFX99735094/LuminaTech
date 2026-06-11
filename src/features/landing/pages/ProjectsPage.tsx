@@ -1,51 +1,63 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, Filter, Search, SlidersHorizontal, Sparkles } from 'lucide-react';
-import { projects } from '../data/projects';
-import type { Difficulty } from '../types';
+import { ArrowLeft, Search, SlidersHorizontal, Sparkles } from 'lucide-react';
+// Catálogo local
 import { ProjectCard } from '../components/ProjectCard';
-import { accentMap } from '../components/ProjectCard';
-
-const DIFFICULTIES: ('Todos' | Difficulty)[] = [
-  'Todos',
-  'Iniciante',
-  'Intermediário',
-  'Avançado',
-];
+import { fetchAllProjectsPublic } from '../data/projectsRepo';
+import { projects as localProjects } from '../data/projects';
 
 export function ProjectsPage() {
-  const [difficulty, setDifficulty] = useState<'Todos' | Difficulty>('Todos');
   const [query, setQuery] = useState('');
+  const [remote, setRemote] = useState<any[] | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    async function load() {
+      try {
+        const data = await fetchAllProjectsPublic();
+        if (!cancelled) setRemote(data as any);
+      } catch {
+        if (!cancelled) setRemote(null);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+    load();
+    return () => { cancelled = true; };
+  }, []);
+
+  const all = useMemo(() => {
+    if (Array.isArray(remote) && remote.length > 0) return remote;
+    return localProjects;
+  }, [remote]);
 
   const filtered = useMemo(() => {
-    return projects.filter((project) => {
-      const matchDifficulty = difficulty === 'Todos' || project.difficulty === difficulty;
+    return all.filter((project: any) => {
       const q = query.trim().toLowerCase();
       const matchQuery =
         q.length === 0 ||
         project.title.toLowerCase().includes(q) ||
         project.subtitle.toLowerCase().includes(q) ||
-        project.bncc.some((area) => area.toLowerCase().includes(q)) ||
-        project.materials.some((m) => m.toLowerCase().includes(q));
-      return matchDifficulty && matchQuery;
+        (project.bncc as string[]).some((area: string) => area.toLowerCase().includes(q)) ||
+        (project.materials as string[]).some((m: string) => m.toLowerCase().includes(q));
+      return matchQuery;
     });
-  }, [difficulty, query]);
+  }, [all, query]);
 
   const stats = useMemo(() => {
+    const list = all;
     return {
-      total: projects.length,
-      iniciante: projects.filter((p) => p.difficulty === 'Iniciante').length,
-      intermediario: projects.filter((p) => p.difficulty === 'Intermediário').length,
-      avancado: projects.filter((p) => p.difficulty === 'Avançado').length,
+      total: list.length,
     };
-  }, []);
+  }, [all]);
 
   return (
     <div className="min-h-screen bg-paper-50 font-body text-ink-900 selection:bg-cyan-spark selection:text-ink-900">
       <PageHeader />
 
       <main>
-        <PageHero total={stats.total} />
+      <PageHero total={stats.total} />
 
         <section className="relative bg-paper-100 pb-24 pt-2 lg:pb-32">
           <div className="mx-auto w-full max-w-7xl px-6 lg:px-10">
@@ -70,31 +82,7 @@ export function ProjectsPage() {
                   )}
                 </label>
               </div>
-
-              <div className="md:col-span-7">
-                <div className="flex flex-wrap items-center gap-1.5">
-                  <span className="mr-1 inline-flex items-center gap-1.5 font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-ink-900/55">
-                    <Filter className="h-3 w-3" strokeWidth={2.5} />
-                    Dificuldade
-                  </span>
-                  {DIFFICULTIES.map((d) => {
-                    const active = difficulty === d;
-                    return (
-                      <button
-                        key={d}
-                        onClick={() => setDifficulty(d)}
-                        className={`rounded-md border-2 px-3 py-1.5 font-mono text-[10.5px] font-bold uppercase tracking-[0.18em] transition-all ${
-                          active
-                            ? 'border-ink-900 bg-violet-deep text-paper-50 shadow-[2px_2px_0_0_#22D3EE]'
-                            : 'border-ink-900/20 bg-paper-50 text-ink-900/70 hover:border-ink-900 hover:text-ink-900'
-                        }`}
-                      >
-                        {d}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
+              <div className="md:col-span-7" />
             </div>
 
             <div className="mt-4 flex flex-wrap items-center justify-between gap-3 font-mono text-[10.5px] uppercase tracking-[0.18em] text-ink-900/55">
@@ -109,29 +97,31 @@ export function ProjectsPage() {
               </p>
             </div>
 
-            {filtered.length === 0 ? (
+            {loading ? (
+              <div className="mt-16 flex flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed border-ink-900/20 bg-paper-50 px-6 py-16 text-center">
+                <p className="font-display text-2xl font-bold text-ink-900">Carregando…</p>
+                <p className="font-body text-[15px] text-ink-900/65">Buscando projetos no Supabase</p>
+              </div>
+            ) : filtered.length === 0 ? (
               <div className="mt-16 flex flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed border-ink-900/20 bg-paper-50 px-6 py-16 text-center">
                 <p className="font-display text-2xl font-bold text-ink-900">
                   Nenhum projeto encontrado
                 </p>
                 <p className="font-body text-[15px] text-ink-900/65">
-                  Tente outro termo ou remova o filtro de dificuldade.
+                  Tente outro termo ou limpe a busca.
                 </p>
                 <button
-                  onClick={() => {
-                    setDifficulty('Todos');
-                    setQuery('');
-                  }}
+                  onClick={() => setQuery('')}
                   className="mt-2 inline-flex items-center gap-2 rounded-md border-2 border-ink-900 bg-cyan-spark px-4 py-2 font-mono text-[10.5px] font-bold uppercase tracking-[0.18em] text-ink-900"
                 >
                   Limpar filtros
                 </button>
               </div>
             ) : (
-              <div className="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 lg:gap-6 xl:grid-cols-4">
-                {filtered.map((project, index) => (
-                  <ProjectCard key={project.id} project={project} index={index} />
-                ))}
+              <div className="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 lg:gap-6">
+                 {filtered.map((project, index) => (
+                   <ProjectCard key={project.id} project={project} index={index} />
+                 ))}
               </div>
             )}
 
@@ -149,7 +139,7 @@ export function ProjectsPage() {
               </p>
               <Link
                 to="/cadastro"
-                className="mt-2 inline-flex items-center gap-2 rounded-md border-2 border-ink-900 bg-violet-deep px-5 py-3 font-mono text-[11px] font-bold uppercase tracking-[0.18em] text-paper-50 shadow-[3px_3px_0_0_#4C1D95] transition-all hover:translate-x-[2px] hover:translate-y-[2px] hover:bg-cyan-spark hover:text-ink-900 hover:shadow-[1px_1px_0_0_#4C1D95]"
+                className="mt-2 inline-flex items-center gap-2 rounded-md border-2 border-ink-900 bg-violet-deep px-5 py-3 font-mono text-[11px] font-bold uppercase tracking-[0.18em] text-paper-50 shadow-[3px_3px_0_0_#4C1D95] hover:bg-cyan-spark hover:text-ink-900"
               >
                 Conhecer plano Escola
               </Link>
@@ -183,9 +173,9 @@ function PageHeader() {
 
         <Link
           to="/"
-          className="group inline-flex items-center gap-2 rounded-md border-2 border-ink-900 bg-paper-50 px-4 py-2.5 font-mono text-[12px] font-bold uppercase tracking-[0.18em] text-ink-900 transition-all hover:bg-violet-deep hover:text-paper-50"
+          className="inline-flex items-center gap-2 rounded-md border-2 border-ink-900 bg-paper-50 px-4 py-2.5 font-mono text-[12px] font-bold uppercase tracking-[0.18em] text-ink-900 hover:bg-violet-deep hover:text-paper-50"
         >
-          <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-0.5" />
+          <ArrowLeft className="h-4 w-4" />
           Voltar
         </Link>
       </nav>
@@ -236,27 +226,11 @@ function PageHero({ total }: { total: number }) {
         </h1>
 
         <p className="mt-5 max-w-2xl font-body text-lg leading-[1.55] text-ink-900/75">
-          Filtre por dificuldade, busque por componente ou área BNCC e baixe
+          Busque por componente ou área BNCC e baixe
           o roteiro completo com lista de materiais, código-fonte comentado e
           mapa de competências.
         </p>
 
-        <ul className="mt-8 flex flex-wrap items-center gap-2">
-          {(['amber', 'lime', 'cyan', 'rose', 'violet', 'teal', 'orange', 'fuchsia'] as const).map(
-            (key) => {
-              const accent = accentMap[key];
-              return (
-                <li
-                  key={key}
-                  className={`inline-flex items-center gap-1.5 rounded-md border-2 border-ink-900 px-2.5 py-1 font-mono text-[10px] font-bold uppercase tracking-[0.18em] ${accent.deep}`}
-                >
-                  <span className="h-1.5 w-1.5 rounded-full bg-ink-900" />
-                  {key}
-                </li>
-              );
-            },
-          )}
-        </ul>
       </div>
     </section>
   );

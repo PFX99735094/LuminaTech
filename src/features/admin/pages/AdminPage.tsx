@@ -6,22 +6,20 @@ import {
   FolderKanban,
   LayoutDashboard,
   LogOut,
-  Plus,
   Shield,
   Users,
 } from 'lucide-react';
-import { CadastroProjeto } from '../components/CadastroProjeto';
+// Cadastro de projeto removido: mantemos projetos somente no código
 import { ListaClientes } from '../components/ListaClientes';
 import { ListaProjetos } from '../components/ListaProjetos';
 import { useAdminAuth } from '../context/AdminAuthContext';
 import { projects as allProjects } from '../../landing/data/projects';
 import { bnccPillars } from '../../landing/data/bnccAreas';
 
-type Tab = 'dashboard' | 'cadastro' | 'clientes' | 'projetos';
+type Tab = 'dashboard' | 'clientes' | 'projetos';
 
 const tabs: { key: Tab; label: string; icon: typeof LayoutDashboard }[] = [
   { key: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { key: 'cadastro', label: 'Cadastrar Projeto', icon: Plus },
   { key: 'clientes', label: 'Clientes', icon: Users },
   { key: 'projetos', label: 'Projetos', icon: FolderKanban },
 ];
@@ -61,9 +59,7 @@ export function AdminPage() {
         <main className="min-w-0 flex-1">
           <div className="rounded-xl border-2 border-ink-900 bg-paper-50 p-6 shadow-[5px_5px_0_0_#4C1D95] lg:p-8">
             {activeTab === 'dashboard' && <Dashboard />}
-            {activeTab === 'cadastro' && (
-              <CadastroProjeto onSuccess={() => setActiveTab('projetos')} />
-            )}
+            {/* Aba de cadastro removida */}
             {activeTab === 'clientes' && <ListaClientes />}
             {activeTab === 'projetos' && <ListaProjetos />}
           </div>
@@ -81,13 +77,8 @@ function Dashboard() {
   const [supabaseError, setSupabaseError] = useState(false);
 
   const originaisCount = useMemo(() => allProjects.length, []);
-  const adminCount = useMemo(() => {
-    try {
-      const raw = localStorage.getItem('admin_projects');
-      return raw ? JSON.parse(raw).length : 0;
-    } catch { return 0; }
-  }, []);
-  const projetosCount = originaisCount + adminCount;
+  // Exibir apenas os projetos originais no painel, conforme solicitado
+  const projetosCount = originaisCount;
   const bnccCount = bnccPillars.length;
 
   useEffect(() => {
@@ -95,8 +86,12 @@ function Dashboard() {
     async function fetch() {
       try {
         const { supabase } = await import('../../../lib/supabaseClient');
-        const { data: profiles } = await supabase.rpc('get_all_profiles');
+        const { data: profiles, error } = await supabase.rpc('get_all_profiles');
         if (cancelled) return;
+        if (error) {
+          setSupabaseError(true);
+          return;
+        }
         const total = (profiles ?? []).length;
         setClientsCount(total);
 
@@ -113,7 +108,7 @@ function Dashboard() {
   }, []);
 
   const stats = [
-    { label: 'Projetos', value: String(projetosCount), desc: `${originaisCount} originais · ${adminCount} admin`, accent: 'bg-cyan-spark' },
+    { label: 'Projetos', value: String(projetosCount), desc: `${originaisCount} originais`, accent: 'bg-cyan-spark' },
     { label: 'Clientes', value: supabaseError ? '—' : String(clientsCount ?? '…'), desc: supabaseError ? 'Supabase não configurado' : 'Cadastrados', accent: 'bg-violet-spark' },
     { label: 'Áreas BNCC', value: String(bnccCount), desc: 'Mapeadas', accent: 'bg-lime-spark' },
     { label: 'Escolas', value: supabaseError ? '—' : String(escolasCount ?? '…'), desc: supabaseError ? 'Supabase não configurado' : 'Plano Escola', accent: 'bg-amber-glow' },
@@ -155,10 +150,7 @@ function Dashboard() {
           Use o menu ao lado para navegar entre as seções.
         </p>
         <ul className="mt-4 space-y-1.5 font-mono text-[12px] text-ink-900/60">
-          <li className="flex items-start gap-2">
-            <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-cyan-spark" />
-            <span><strong className="text-ink-900">Cadastrar Projeto</strong> — formulário para adicionar novos projetos (salvos no navegador)</span>
-          </li>
+          {/* Item de cadastro removido */}
           <li className="flex items-start gap-2">
             <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-violet-spark" />
             <span><strong className="text-ink-900">Clientes</strong> — dados vindos do Supabase (tabela profiles)</span>

@@ -47,7 +47,8 @@ export function ProtectedRoute({
   }
 
   if (!meetsRequirement(profile?.plan ?? null, requiredPlan)) {
-    return <Navigate to="/planos" replace />;
+    // Redirect to home with anchor to the pricing/planos section
+    return <Navigate to="/#planos" replace />;
   }
 
   return <>{children}</>;

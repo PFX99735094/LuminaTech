@@ -6,12 +6,13 @@ Armazenar e exibir de forma organizada os projetos de robótica, circuitos, cód
 ## 2. Funcionalidades Implementadas
 
 ### 2.1 Vitrine na Home (LandingPage)
-* Grid responsivo 1 → 2 → 4 colunas com até 4 cards em destaque.
+* Grid responsivo 1 → 2 → 3 colunas no desktop (`sm:grid-cols-2 lg:grid-cols-3`) com até 4 cards em destaque.
+* Cards em pé (`aspect-[4/5]`) com imagem, badge de dificuldade, descrição, duração e CTA.
 * Ordenação por dificuldade (Iniciante → Avançado).
 * CTA "Ver todos os N projetos" que navega para `/projetos`.
 
 ### 2.2 Catálogo Completo (`/projetos`)
-* Grid 1 → 2 → 3 → 4 colunas com todos os projetos (originais + criados via admin).
+* Grid 1 → 2 → 3 colunas no desktop (`sm:grid-cols-2 lg:grid-cols-3`) com todos os projetos (originais + criados via admin).
 * **Barra de busca textual** — filtra por título, área BNCC e materiais.
 * **Filtro de dificuldade** — pílulas "Todos / Iniciante / Intermediário / Avançado" com estado ativo (violet-deep + sombra cyan).
 * Contagem dinâmica de resultados.
@@ -62,7 +63,7 @@ Armazenar e exibir de forma organizada os projetos de robótica, circuitos, cód
 ## 5. Componentes Principais
 | Componente | Caminho | Função |
 |---|---|---|
-| `ProjectCard` | `features/landing/components/ProjectCard.tsx` | Card reutilizável (home, catálogo) |
+| `ProjectCard` | `features/landing/components/ProjectCard.tsx` | Card vertical (aspect-[4/5]) com imagem, badge de dificuldade, descrição, duração e botão com accent dinâmico |
 | `ProjectShowcase` | `features/landing/components/ProjectShowcase.tsx` | Vitrine de 4 projetos na home |
 | `WiringDiagram` | `features/landing/components/WiringDiagram.tsx` | Foto do esquema + legenda de fios |
 | `CodeBlock` | `features/landing/components/CodeBlock.tsx` | Bloco de código com copiar/baixar |
@@ -86,6 +87,8 @@ Armazenar e exibir de forma organizada os projetos de robótica, circuitos, cód
   bnccCode: string;
   illustration: IllustrationKey;
   accent: AccentKey;
+  cardImageUrl?: string;    // imagem de capa (fallback Unsplash se ausente)
+  cardImageAlt?: string;
 }
 ```
 

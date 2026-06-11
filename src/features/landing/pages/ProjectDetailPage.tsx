@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import {
   ArrowLeft,
@@ -9,28 +9,57 @@ import {
   Sparkles,
   Wrench,
 } from 'lucide-react';
-import { projects } from '../data/projects';
 import { projectDetails, hasProjectDetails } from '../data/projectDetails';
 import { bnccCompetencies } from '../data/bnccAreas';
-import type { AccentKey, Project, ProjectDetails } from '../types';
+import type { Project, ProjectDetails } from '../types';
 import { CodeBlock } from '../components/CodeBlock';
 import { PinLegend, WiringDiagram } from '../components/wiring/WiringDiagram';
-import { accentMap } from '../components/ProjectCard';
+import { fetchProjectByIdPublic } from '../data/projectsRepo';
+import { projects as localProjects } from '../data/projects';
 
 export function ProjectDetailPage() {
   const { id = '' } = useParams<{ id: string }>();
-  const project = projects.find((p) => p.id === id);
-  const details = hasProjectDetails(id) ? projectDetails[id] : undefined;
+  const [project, setProject] = useState<Project | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [details, setDetails] = useState<ProjectDetails | undefined>(undefined);
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'instant' });
+    let cancelled = false;
+    async function load() {
+      setLoading(true);
+      // tenta buscar no Supabase e, se não achar, usa local
+      const remote = await fetchProjectByIdPublic(id);
+      if (cancelled) return;
+      if (remote) {
+        setProject(remote);
+      } else {
+        const local = localProjects.find((p) => p.id === id) ?? null;
+        setProject(local);
+      }
+      setDetails(hasProjectDetails(id) ? projectDetails[id] : undefined);
+      setLoading(false);
+    }
+    load();
+    return () => { cancelled = true; };
   }, [id]);
+
+  if (loading) {
+    return (
+      <div className="grid min-h-screen place-items-center bg-paper-50">
+        <div className="flex flex-col items-center gap-3">
+          <span className="h-8 w-8 animate-spin rounded-full border-4 border-ink-900/20 border-t-cyan-spark" />
+          <span className="font-mono text-[11px] uppercase tracking-[0.18em] text-ink-900/55">
+            Carregando projeto…
+          </span>
+        </div>
+      </div>
+    );
+  }
 
   if (!project) {
     return <NotFound />;
   }
-
-  const accent = accentMap[project.accent];
 
   return (
     <div className="min-h-screen bg-paper-50 font-body text-ink-900 selection:bg-cyan-spark selection:text-ink-900">
@@ -49,10 +78,7 @@ export function ProjectDetailPage() {
                 'radial-gradient(ellipse 80% 60% at 50% 35%, #000 50%, transparent 100%)',
             }}
           />
-          <div
-            aria-hidden
-            className={`pointer-events-none absolute -right-20 -top-10 h-80 w-80 rounded-full blur-[120px ${accent.soft}`}
-          />
+          <div aria-hidden className="pointer-events-none absolute -right-20 -top-10 h-80 w-80 rounded-full bg-cyan-spark/15 blur-[120px]" />
 
           <div className="relative mx-auto w-full max-w-7xl px-6 pb-12 pt-12 lg:px-10 lg:pb-16 lg:pt-16">
             <Link
@@ -66,11 +92,7 @@ export function ProjectDetailPage() {
             <div className="grid grid-cols-1 items-end gap-8 md:grid-cols-12">
               <div className="md:col-span-7">
                 <div className="inline-flex items-center gap-3 font-mono text-[11px] uppercase tracking-[0.22em] text-ink-900/70">
-                  <span
-                    className={`grid h-7 w-7 place-items-center rounded-full border-2 border-ink-900 font-bold ${accent.deep}`}
-                  >
-                    {String(projects.indexOf(project) + 1).padStart(2, '0').slice(-2)}
-                  </span>
+                  <span className="grid h-7 w-7 place-items-center rounded-full border-2 border-ink-900 bg-amber-glow font-bold text-ink-900">01</span>
                   <span>projeto pronto</span>
                   <span className="hidden h-px w-12 bg-ink-900/20 sm:block" />
                 </div>
@@ -83,11 +105,10 @@ export function ProjectDetailPage() {
                 </p>
               </div>
 
-              <dl className="grid grid-cols-3 gap-4 font-mono text-[10px] uppercase tracking-[0.18em] text-ink-900/55 md:col-span-5">
-                <Stat label="Dificuldade" value={project.difficulty} />
-                <Stat label="Duração" value={project.duration} />
-                <Stat label="BNCC" value={project.bnccCode} small />
-              </dl>
+                <dl className="grid grid-cols-3 gap-4 font-mono text-[10px] uppercase tracking-[0.18em] text-ink-900/55 md:col-span-5">
+                  <Stat label="Duração" value={project.duration} />
+                  <Stat label="BNCC" value={project.bnccCode} small />
+                </dl>
             </div>
 
             <p className="mt-8 max-w-3xl font-body text-[17px] leading-[1.55] text-ink-900/80">
@@ -101,14 +122,12 @@ export function ProjectDetailPage() {
             projectId={id}
             project={project}
             details={details}
-            accentKey={project.accent}
           />
         ) : (
           <NotReadySection
             project={project}
             fallbackDescription={project.description}
             materials={project.materials}
-            accentDeep={accent.deep}
           />
         )}
       </main>
@@ -122,12 +141,10 @@ function DetailsSection({
   projectId,
   project,
   details,
-  accentKey: _accentKey,
 }: {
   projectId: string;
   project: Project;
   details: ProjectDetails;
-  accentKey: AccentKey;
 }) {
   return (
     <>
@@ -363,19 +380,15 @@ function NotReadySection({
   project: _project,
   fallbackDescription,
   materials,
-  accentDeep,
 }: {
   project: Project;
   fallbackDescription: string;
   materials: string[];
-  accentDeep: string;
 }) {
   return (
     <section className="bg-paper-50 py-20">
       <div className="mx-auto w-full max-w-3xl px-6 text-center">
-        <span
-          className={`inline-flex items-center gap-1.5 rounded-full border-2 border-ink-900 px-3 py-1 font-mono text-[10.5px] font-bold uppercase tracking-[0.2em] ${accentDeep}`}
-        >
+        <span className="inline-flex items-center gap-1.5 rounded-full border-2 border-ink-900 bg-amber-glow px-3 py-1 font-mono text-[10.5px] font-bold uppercase tracking-[0.2em] text-ink-900">
           <BookOpen className="h-3 w-3" strokeWidth={2.5} />
           Em breve
         </span>
@@ -400,7 +413,7 @@ function NotReadySection({
 
         <Link
           to="/projetos"
-          className="mt-8 inline-flex items-center gap-2 rounded-md border-2 border-ink-900 bg-violet-deep px-5 py-3 font-mono text-[11px] font-bold uppercase tracking-[0.2em] text-paper-50 shadow-[3px_3px_0_0_#4C1D95] transition-all hover:translate-x-[2px] hover:translate-y-[2px] hover:bg-cyan-spark hover:text-ink-900 hover:shadow-[1px_1px_0_0_#4C1D95]"
+          className="mt-8 inline-flex items-center gap-2 rounded-md border-2 border-ink-900 bg-violet-deep px-5 py-3 font-mono text-[11px] font-bold uppercase tracking-[0.2em] text-paper-50 shadow-[3px_3px_0_0_#4C1D95] hover:bg-cyan-spark hover:text-ink-900"
         >
           <ArrowLeft className="h-3.5 w-3.5" />
           Voltar para o catálogo
@@ -468,9 +481,9 @@ function DetailHeader() {
 
         <Link
           to="/projetos"
-          className="group inline-flex items-center gap-2 rounded-md border-2 border-ink-900 bg-paper-50 px-4 py-2.5 font-mono text-[12px] font-bold uppercase tracking-[0.18em] text-ink-900 transition-all hover:bg-violet-deep hover:text-paper-50"
+          className="inline-flex items-center gap-2 rounded-md border-2 border-ink-900 bg-paper-50 px-4 py-2.5 font-mono text-[12px] font-bold uppercase tracking-[0.18em] text-ink-900 hover:bg-violet-deep hover:text-paper-50"
         >
-          <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-0.5" />
+          <ArrowLeft className="h-4 w-4" />
           Voltar
         </Link>
       </nav>
@@ -499,7 +512,7 @@ function DetailFooter() {
         <div className="flex items-center gap-2">
           <Link
             to="/projetos"
-            className="inline-flex items-center gap-2 rounded-md border-2 border-paper-50/30 bg-transparent px-4 py-2 font-mono text-[10.5px] font-bold uppercase tracking-[0.18em] text-paper-50 transition-all hover:border-paper-50 hover:bg-paper-50/[0.06]"
+            className="inline-flex items-center gap-2 rounded-md border-2 border-paper-50/30 bg-transparent px-4 py-2 font-mono text-[10.5px] font-bold uppercase tracking-[0.18em] text-paper-50 hover:border-paper-50 hover:bg-paper-50/[0.06]"
           >
             <ArrowUpRight className="h-3.5 w-3.5" /> Ver mais projetos
           </Link>

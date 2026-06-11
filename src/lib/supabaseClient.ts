@@ -10,10 +10,14 @@ if (!supabaseUrl || !supabaseAnonKey) {
   );
 }
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+const client = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     autoRefreshToken: true,
     persistSession: true,
     detectSessionInUrl: true,
   },
 });
+
+// Exporta a API de autenticação e o cliente completo para leituras (clientes/escolas)
+export const supabaseAuth = client.auth;
+export const supabase = client;

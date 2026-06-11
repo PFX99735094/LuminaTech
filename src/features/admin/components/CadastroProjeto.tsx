@@ -1,15 +1,17 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Check, ImagePlus, Plus, Sparkles, X } from 'lucide-react';
 import type { Difficulty, BnccArea, AccentKey, IllustrationKey } from '../../landing/types';
-import { projects } from '../../landing/data/projects';
+import { insertAdminProject, fetchAdminProjects, uploadWiringImage, uploadCardImage } from '../data/projectsRepo';
+import { useAuth } from '../../auth';
+import { useNavigate } from 'react-router-dom';
 
 const DIFFICULTIES: Difficulty[] = ['Iniciante', 'Intermediário', 'Avançado'];
 const BNCC_AREAS: BnccArea[] = [
   'Matemática', 'Ciências', 'Física', 'Geografia', 'Artes',
   'Língua Portuguesa', 'História', 'Tecnologia', 'Robótica',
 ];
-const ACCENTS: AccentKey[] = ['amber', 'lime', 'cyan', 'rose', 'violet', 'teal', 'orange', 'fuchsia'];
-const ILLUSTRATIONS: IllustrationKey[] = ['lixeira', 'carrinho', 'braco', 'sensor', 'semaforo', 'jardim', 'piano', 'casa'];
+const ACCENTS: AccentKey[] = ['amber', 'lime', 'cyan', 'rose', 'violet', 'teal', 'orange'];
+const ILLUSTRATIONS: IllustrationKey[] = ['lixeira', 'carrinho', 'sensor', 'semaforo', 'jardim', 'piano'];
 
 const accentColors: Record<AccentKey, string> = {
   amber: 'bg-amber-glow',
@@ -19,7 +21,6 @@ const accentColors: Record<AccentKey, string> = {
   violet: 'bg-violet-spark',
   teal: 'bg-teal-spark',
   orange: 'bg-orange-spark',
-  fuchsia: 'bg-fuchsia-spark',
 };
 
 interface ProjetoForm {
@@ -43,6 +44,8 @@ interface ProjetoForm {
   wiringImage: string;
   wiringImageAlt: string;
   wiringCaption: string;
+  cardImageUrl: string;
+  cardImageAlt: string;
 }
 
 const emptyForm: ProjetoForm = {
@@ -66,6 +69,8 @@ const emptyForm: ProjetoForm = {
   wiringImage: '',
   wiringImageAlt: '',
   wiringCaption: '',
+  cardImageUrl: '',
+  cardImageAlt: '',
 };
 
 interface CadastroProjetoProps {
@@ -79,6 +84,9 @@ export function CadastroProjeto({ onSuccess }: CadastroProjetoProps) {
   const [stepInput, setStepInput] = useState('');
   const [saved, setSaved] = useState(false);
   const [imageFile, setImageFile] = useState<File | null>(null);
+  const [cardImageFile, setCardImageFile] = useState<File | null>(null);
+  const { user } = useAuth();
+  const navigate = useNavigate();
 
   function slugify(text: string) {
     return text
@@ -114,25 +122,121 @@ export function CadastroProjeto({ onSuccess }: CadastroProjetoProps) {
     if (input) input.value = '';
   }
 
-  function handleSubmit(e: React.FormEvent) {
+  function handleCardImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 2 * 1024 * 1024) {
+      alert('A imagem deve ter no máximo 2 MB.');
+      return;
+    }
+    setCardImageFile(file);
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const dataUrl = ev.target?.result as string;
+      setForm({ ...form, cardImageUrl: dataUrl });
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function removeCardImage() {
+    setCardImageFile(null);
+    setForm({ ...form, cardImageUrl: '' });
+    const input = document.getElementById('card-image-input') as HTMLInputElement;
+    if (input) input.value = '';
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!form.title || !form.description) return;
+    // Requer sessão autenticada do Supabase para cumprir políticas de Storage
+    if (!user) {
+      alert('Você precisa estar logado (Supabase) para cadastrar projetos. Faça login e tente novamente.');
+      navigate('/login');
+      return;
+    }
+    // Card image é recomendada, mas opcional na criação
 
     const projectId = form.id || slugify(form.title);
-    const newProject = { ...form, id: projectId };
 
-    const stored = localStorage.getItem('admin_projects');
-    const existing: ProjetoForm[] = stored ? JSON.parse(stored) : [];
-    existing.push(newProject);
-    localStorage.setItem('admin_projects', JSON.stringify(existing));
+    // Se houver imagem selecionada, envia para o Storage e usa a URL pública
+    let wiringImageUrl: string | null = null;
+    if (imageFile) {
+      const { url, error: uploadErr } = await uploadWiringImage(imageFile, projectId);
+      if (uploadErr) {
+        const isRls = /row-level security/i.test(uploadErr) || /rls/i.test(uploadErr);
+        if (isRls && form.wiringImage) {
+          wiringImageUrl = form.wiringImage; // data URL (base64)
+        } else {
+          alert(`Falha ao enviar imagem para o Supabase Storage: ${uploadErr}`);
+          return;
+        }
+      } else {
+        wiringImageUrl = url;
+      }
+    }
 
+    // Upload da imagem do card (opcional)
+    let cardImageUrl: string | null = form.cardImageUrl || null;
+    if (cardImageFile) {
+      const { url, error: cardErr } = await uploadCardImage(cardImageFile, projectId);
+      if (cardErr) {
+        const isRls = /row-level security/i.test(cardErr) || /rls/i.test(cardErr);
+        if (isRls && form.cardImageUrl) {
+          // Fallback: persiste a data URL no próprio banco
+          cardImageUrl = form.cardImageUrl;
+        } else {
+          alert(`Falha ao enviar imagem do card: ${cardErr}`);
+          return;
+        }
+      } else {
+        cardImageUrl = url;
+      }
+    }
+
+    // Map to a payload mais amigável ao Postgres (snake_case para colunas)
+    const payload = {
+      id: projectId,
+      title: form.title,
+      subtitle: form.subtitle,
+      description: form.description,
+      difficulty: form.difficulty,
+      duration: form.duration,
+      materials: form.materials,
+      bncc: form.bncc,
+      bncc_code: form.bnccCode,
+      bncc_competencies: form.bnccCompetencies,
+      illustration: form.illustration,
+      accent: form.accent,
+      kind: form.kind,
+      summary: form.summary,
+      code: form.code,
+      ino_filename: form.inoFilename,
+      setup_steps: form.setupSteps,
+      wiring_image_url: wiringImageUrl,
+      wiring_image_alt: form.wiringImageAlt,
+      wiring_caption: form.wiringCaption,
+      card_image_url: cardImageUrl,
+      card_image_alt: form.cardImageAlt,
+      hidden: false,
+    };
+
+    const { error } = await insertAdminProject(payload);
+    if (error) {
+      alert(`Falha ao salvar no Supabase: ${error}`);
+      return;
+    }
+
+    // Reset form state
     setForm({ ...emptyForm });
     setMaterialInput('');
     setCompetencyInput('');
     setStepInput('');
     setImageFile(null);
+    setCardImageFile(null);
     const input = document.getElementById('wiring-image-input') as HTMLInputElement;
     if (input) input.value = '';
+    const inputCard = document.getElementById('card-image-input') as HTMLInputElement;
+    if (inputCard) inputCard.value = '';
     setSaved(true);
     setTimeout(() => setSaved(false), 2500);
     onSuccess();
@@ -183,7 +287,33 @@ export function CadastroProjeto({ onSuccess }: CadastroProjetoProps) {
     });
   }
 
-  const totalProjects = projects.length + (localStorage.getItem('admin_projects') ? JSON.parse(localStorage.getItem('admin_projects')!).length : 0);
+  const [adminCount, setAdminCount] = useState<number | null>(null);
+  const [adminCountError, setAdminCountError] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    async function load() {
+      try {
+        const { data, error } = await fetchAdminProjects();
+        if (cancelled) return;
+        if (error) {
+          setAdminCountError(true);
+          setAdminCount(0);
+        } else {
+          setAdminCount(data.length);
+        }
+      } catch {
+        if (!cancelled) {
+          setAdminCountError(true);
+          setAdminCount(0);
+        }
+      }
+    }
+    load();
+    return () => { cancelled = true; };
+  }, []);
+
+  const totalProjects = (adminCount ?? 0);
 
   return (
     <div>
@@ -409,6 +539,57 @@ export function CadastroProjeto({ onSuccess }: CadastroProjetoProps) {
         <div className="rounded-xl border-2 border-dashed border-ink-900/30 bg-paper-100/50 p-5">
           <h3 className="flex items-center gap-2 font-display text-[16px] font-semibold text-ink-900">
             <ImagePlus className="h-4 w-4 text-cyan-spark" strokeWidth={2.25} />
+            Imagem do Card (Catálogo)
+          </h3>
+          <p className="mt-1 font-mono text-[10.5px] uppercase tracking-[0.14em] text-ink-900/50">
+            PNG/JPEG exibida no card do catálogo
+          </p>
+
+          <div className="mt-4 grid grid-cols-1 gap-5 md:grid-cols-2">
+            <Field label="Upload (opcional, máx 2 MB)">
+              <div className="flex items-center gap-3">
+                <label className="flex cursor-pointer items-center gap-2 rounded-md border-2 border-ink-900 bg-paper-50 px-4 py-2.5 font-mono text-[11px] font-bold uppercase tracking-[0.16em] text-ink-900 transition-all hover:bg-violet-deep hover:text-paper-50">
+                  <ImagePlus className="h-4 w-4" strokeWidth={2.25} />
+                  {cardImageFile ? 'Trocar imagem' : 'Selecionar imagem'}
+                  <input
+                    id="card-image-input"
+                    type="file"
+                    accept="image/png,image/jpeg,image/webp"
+                    onChange={handleCardImageUpload}
+                    className="hidden"
+                  />
+                </label>
+                {form.cardImageUrl && (
+                  <button type="button" onClick={removeCardImage} className="font-mono text-[10px] uppercase tracking-[0.16em] text-rose-deep hover:text-rose-pulse">
+                    Remover
+                  </button>
+                )}
+              </div>
+              {form.cardImageUrl && (
+                <div className="relative mt-3 overflow-hidden rounded-lg border-2 border-ink-900">
+                  <img
+                    src={form.cardImageUrl}
+                    alt={form.cardImageAlt || 'Preview imagem do card'}
+                    className="aspect-[5/4] w-full object-cover"
+                  />
+                </div>
+              )}
+            </Field>
+            <Field label="Texto alternativo (alt)">
+              <input
+                type="text"
+                value={form.cardImageAlt}
+                onChange={(e) => setForm({ ...form, cardImageAlt: e.target.value })}
+                className="w-full rounded-md border-2 border-ink-900 bg-paper-50 px-3 py-2.5 font-mono text-[12px] text-ink-900 placeholder:text-ink-900/45 focus:shadow-[2px_2px_0_0_#4C1D95] focus:outline-none"
+                placeholder="Foto/ilustração do projeto para o card"
+              />
+            </Field>
+          </div>
+        </div>
+
+        <div className="rounded-xl border-2 border-dashed border-ink-900/30 bg-paper-100/50 p-5">
+          <h3 className="flex items-center gap-2 font-display text-[16px] font-semibold text-ink-900">
+            <ImagePlus className="h-4 w-4 text-cyan-spark" strokeWidth={2.25} />
             Esquema de Ligação (Wiring)
           </h3>
           <p className="mt-1 font-mono text-[10.5px] uppercase tracking-[0.14em] text-ink-900/50">
@@ -579,7 +760,7 @@ export function CadastroProjeto({ onSuccess }: CadastroProjetoProps) {
             Salvar Projeto
           </button>
           <span className="font-mono text-[10.5px] uppercase tracking-[0.18em] text-ink-900/45">
-            Os dados são salvos no navegador (localStorage)
+            {adminCountError ? 'Supabase não configurado' : 'Os dados são salvos no Supabase'}
           </span>
         </div>
       </form>

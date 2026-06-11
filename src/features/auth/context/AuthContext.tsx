@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useReducer, type ReactNode } from 'react';
-import { supabase } from '../../../lib/supabaseClient';
+import { supabaseAuth } from '../../../lib/supabaseClient';
 import type { AuthState, AuthAction, Profile } from '../types';
 
 const initialState: AuthState = {
@@ -27,33 +27,24 @@ interface AuthContextValue extends AuthState {
   signInWithGoogle: () => Promise<void>;
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<{ error: string | null }>;
-  updateProfile: (updates: Partial<Profile>) => Promise<{ error: string | null }>;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
-async function fetchProfile(userId: string): Promise<Profile | null> {
-  const { data, error } = await supabase
-    .from('profiles')
-    .select('*')
-    .eq('id', userId)
-    .single();
-
-  if (error || !data) return null;
-  return data as Profile;
-}
+// Perfil via tabela 'profiles' desativado — mantemos apenas autenticação
+async function fetchProfile(_userId: string): Promise<Profile | null> { return null; }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(authReducer, initialState);
 
   useEffect(() => {
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
+    supabaseAuth.getSession().then(async ({ data: { session } }) => {
       const user = session?.user ?? null;
       const profile = user ? await fetchProfile(user.id) : null;
       dispatch({ type: 'SET_USER', payload: { user, profile } });
     });
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+    const { data: { subscription } } = supabaseAuth.onAuthStateChange(
       async (_event, session) => {
         const user = session?.user ?? null;
         const profile = user ? await fetchProfile(user.id) : null;
@@ -65,12 +56,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   async function signIn(email: string, password: string) {
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { error } = await supabaseAuth.signInWithPassword({ email, password });
     return { error: error?.message ?? null };
   }
 
   async function signUp(name: string, email: string, password: string, school?: string) {
-    const { error } = await supabase.auth.signUp({
+    const { error } = await supabaseAuth.signUp({
       email,
       password,
       options: {
@@ -81,7 +72,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   async function signInWithGoogle() {
-    await supabase.auth.signInWithOAuth({
+    await supabaseAuth.signInWithOAuth({
       provider: 'google',
       options: {
         redirectTo: `${window.location.origin}/auth/callback`,
@@ -90,36 +81,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   async function signOut() {
-    await supabase.auth.signOut();
+    await supabaseAuth.signOut();
     dispatch({ type: 'SIGN_OUT' });
   }
 
   async function resetPassword(email: string) {
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    const { error } = await supabaseAuth.resetPasswordForEmail(email, {
       redirectTo: `${window.location.origin}/auth/update-password`,
     });
     return { error: error?.message ?? null };
   }
 
-  async function updateProfile(updates: Partial<Profile>) {
-    if (!state.user) return { error: 'Usuário não autenticado' };
-
-    const { error } = await supabase
-      .from('profiles')
-      .update(updates)
-      .eq('id', state.user.id);
-
-    if (!error && state.user) {
-      const profile = await fetchProfile(state.user.id);
-      dispatch({ type: 'SET_USER', payload: { user: state.user, profile } });
-    }
-
-    return { error: error?.message ?? null };
-  }
-
   return (
     <AuthContext.Provider
-      value={{ ...state, signIn, signUp, signInWithGoogle, signOut, resetPassword, updateProfile }}
+      value={{ ...state, signIn, signUp, signInWithGoogle, signOut, resetPassword }}
     >
       {children}
     </AuthContext.Provider>

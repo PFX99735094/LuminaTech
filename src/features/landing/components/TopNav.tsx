@@ -6,7 +6,7 @@ const navLinks = [
   { label: 'Projetos', href: '/projetos', route: true },
   { label: 'BNCC', href: '/bncc', route: true },
   { label: 'Planos', href: '#planos', route: false },
-  { label: 'Comunidade', href: '#comunidade', route: false },
+
 ];
 
 export function TopNav() {
@@ -61,7 +61,7 @@ export function TopNav() {
         <div className="hidden items-center gap-2 md:flex">
           <Link
             to="/admin"
-            className="inline-flex items-center gap-1.5 rounded-md border-2 border-violet-deep/30 bg-violet-deep/[0.06] px-4 py-2 font-mono text-[12px] font-bold uppercase tracking-[0.16em] text-violet-deep transition-all duration-200 hover:scale-105 hover:border-violet-deep hover:bg-violet-deep hover:text-paper-50 hover:shadow-[0_0_16px_rgba(109,40,217,0.35)] active:scale-95"
+            className="inline-flex items-center gap-1.5 rounded-md border-2 border-violet-deep/30 bg-violet-deep/[0.06] px-4 py-2 font-mono text-[12px] font-bold uppercase tracking-[0.16em] text-violet-deep hover:border-violet-deep hover:bg-violet-deep hover:text-paper-50"
           >
             <Shield className="h-4 w-4 motion-safe:animate-glow-pulse" strokeWidth={2.25} />
             Admin
@@ -74,7 +74,7 @@ export function TopNav() {
               <Link
                 to="/login"
                 onClick={() => signOut()}
-                className="hidden items-center gap-1.5 rounded-md border-2 border-ink-900/20 bg-paper-50 px-4 py-2.5 font-mono text-[12px] font-bold uppercase tracking-[0.16em] text-ink-900 transition-all hover:border-ink-900/50 hover:bg-ink-900/[0.04] sm:inline-flex"
+                className="hidden items-center gap-1.5 rounded-md border-2 border-ink-900/20 bg-paper-50 px-4 py-2.5 font-mono text-[12px] font-bold uppercase tracking-[0.16em] text-ink-900 hover:border-ink-900/50 hover:bg-ink-900/[0.04] sm:inline-flex"
               >
                 <LogOut className="h-4 w-4" />
                 Sair
@@ -88,17 +88,16 @@ export function TopNav() {
             <>
               <Link
                 to="/login"
-                className="hidden items-center gap-1.5 rounded-md border-2 border-ink-900/20 bg-paper-50 px-4 py-2.5 font-mono text-[12px] font-bold uppercase tracking-[0.16em] text-ink-900 transition-all hover:border-ink-900/50 hover:bg-ink-900/[0.04] sm:inline-flex"
+                className="hidden items-center gap-1.5 rounded-md border-2 border-ink-900/20 bg-paper-50 px-4 py-2.5 font-mono text-[12px] font-bold uppercase tracking-[0.16em] text-ink-900 hover:border-ink-900/50 hover:bg-ink-900/[0.04] sm:inline-flex"
               >
                 <LogIn className="h-4 w-4" />
                 Entrar
               </Link>
               <Link
                 to="/auth/register"
-                className="group relative inline-flex items-center gap-1.5 overflow-hidden rounded-md bg-violet-deep px-4 py-2.5 font-mono text-[12px] font-bold uppercase tracking-[0.16em] text-paper-50 transition-all duration-200 hover:scale-105 hover:bg-cyan-spark hover:text-ink-900 hover:shadow-[0_0_20px_rgba(34,211,238,0.3)] active:scale-95"
+                className="relative inline-flex items-center gap-1.5 overflow-hidden rounded-md bg-violet-deep px-4 py-2.5 font-mono text-[12px] font-bold uppercase tracking-[0.16em] text-paper-50 hover:bg-cyan-spark hover:text-ink-900"
               >
-                <span className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/20 to-transparent transition-transform duration-700 group-hover:translate-x-full motion-safe:animate-shimmer" />
-                <UserPlus className="relative h-4 w-4 transition-transform duration-300 group-hover:rotate-12" />
+                <UserPlus className="relative h-4 w-4" />
                 Criar Conta
               </Link>
             </>

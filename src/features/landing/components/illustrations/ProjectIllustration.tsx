@@ -8,8 +8,6 @@ export function ProjectIllustration({ name }: { name: IllustrationKey }) {
       return <Lixeira />;
     case 'carrinho':
       return <Carrinho />;
-    case 'braco':
-      return <Braco />;
     case 'sensor':
       return <Sensor />;
     case 'semaforo':
@@ -18,8 +16,6 @@ export function ProjectIllustration({ name }: { name: IllustrationKey }) {
       return <Jardim />;
     case 'piano':
       return <Piano />;
-    case 'casa':
-      return <Casa />;
   }
 }
 
@@ -74,38 +70,6 @@ function Carrinho() {
         <g fontFamily="monospace" fontSize="7" fill={stroke} opacity="0.7">
           <text x="56" y="180">L298N</text>
           <text x="148" y="180">HC-05</text>
-        </g>
-      </g>
-    </svg>
-  );
-}
-
-function Braco() {
-  return (
-    <svg viewBox="0 0 240 200" className="h-full w-full" fill="none" aria-hidden>
-      <g>
-        <rect x="100" y="150" width="40" height="30" fill="#26221B" stroke={stroke} strokeWidth="2" />
-        <path d="M 80 150 L 160 150" stroke={stroke} strokeWidth="2" />
-        <line x1="120" y1="150" x2="120" y2="130" stroke={stroke} strokeWidth="2.5" />
-        <rect x="115" y="120" width="10" height="10" fill="#22D3EE" stroke={stroke} strokeWidth="1.5" />
-        <line x1="120" y1="120" x2="120" y2="90" stroke={stroke} strokeWidth="2.5" />
-        <line x1="120" y1="100" x2="170" y2="80" stroke={stroke} strokeWidth="2.5" />
-        <circle cx="170" cy="80" r="4" fill="#0E1424" />
-        <line x1="170" y1="80" x2="195" y2="55" stroke={stroke} strokeWidth="2.5" />
-        <rect x="192" y="50" width="8" height="12" fill="#FB923C" stroke={stroke} strokeWidth="1.2" />
-        <line x1="196" y1="62" x2="200" y2="75" stroke={stroke} strokeWidth="1.5" />
-        <g fill="#A3E635" stroke={stroke} strokeWidth="1.4">
-          <rect x="50" y="60" width="20" height="30" rx="3" />
-          <rect x="30" y="100" width="20" height="30" rx="3" />
-          <rect x="200" y="100" width="20" height="30" rx="3" />
-        </g>
-        <path d="M 70 75 Q 110 90 120 120" stroke={stroke} strokeOpacity="0.5" strokeWidth="1.2" strokeDasharray="2 2" fill="none" />
-        <path d="M 50 115 Q 80 115 115 125" stroke={stroke} strokeOpacity="0.5" strokeWidth="1.2" strokeDasharray="2 2" fill="none" />
-        <path d="M 210 115 Q 180 110 130 125" stroke={stroke} strokeOpacity="0.5" strokeWidth="1.2" strokeDasharray="2 2" fill="none" />
-        <g fontFamily="monospace" fontSize="7" fill={stroke} opacity="0.7">
-          <text x="45" y="55">P₁</text>
-          <text x="25" y="95">P₂</text>
-          <text x="195" y="95">P₃</text>
         </g>
       </g>
     </svg>
@@ -245,37 +209,4 @@ function Piano() {
   );
 }
 
-function Casa() {
-  return (
-    <svg viewBox="0 0 240 200" className="h-full w-full" fill="none" aria-hidden>
-      <g>
-        <path d="M 50 100 L 120 50 L 190 100 L 190 165 L 50 165 Z" fill="#E879F9" stroke={stroke} strokeWidth="2" />
-        <path d="M 50 100 L 120 50 L 190 100 L 175 105 L 120 65 L 65 105 Z" fill="#A21CAF" opacity="0.6" />
-        <rect x="100" y="120" width="40" height="45" fill="#0E1424" stroke={stroke} strokeWidth="1.5" />
-        <rect x="105" y="125" width="30" height="20" fill="#22D3EE" />
-        <line x1="120" y1="125" x2="120" y2="145" stroke={stroke} strokeWidth="1" />
-        <line x1="105" y1="135" x2="135" y2="135" stroke={stroke} strokeWidth="1" />
-        <rect x="60" y="115" width="20" height="20" fill="#26221B" stroke={stroke} strokeWidth="1.5" />
-        <line x1="65" y1="120" x2="75" y2="120" stroke={stroke} strokeWidth="1" />
-        <line x1="65" y1="125" x2="75" y2="125" stroke={stroke} strokeWidth="1" />
-        <line x1="65" y1="130" x2="75" y2="130" stroke={stroke} strokeWidth="1" />
-        <rect x="160" y="115" width="20" height="20" fill="#0E1424" stroke={stroke} strokeWidth="1.5" />
-        <circle cx="170" cy="125" r="4" fill="#2DD4BF">
-          <animate attributeName="opacity" values="0.4;1;0.4" dur="2s" repeatCount="indefinite" />
-        </circle>
-        <line x1="40" y1="165" x2="200" y2="165" stroke={stroke} strokeWidth="2.5" />
-        <line x1="35" y1="175" x2="205" y2="175" stroke={stroke} strokeWidth="1.5" strokeDasharray="3 2" opacity="0.6" />
-        <g transform="translate(70 35)">
-          <rect x="0" y="0" width="34" height="20" rx="2" fill="#0E1424" stroke={stroke} strokeWidth="1.2" />
-          <text x="17" y="14" textAnchor="middle" fontFamily="monospace" fontSize="8" fontWeight="700" fill="#A3E635">
-            24°C
-          </text>
-        </g>
-        <g fontFamily="monospace" fontSize="7" fill={stroke} opacity="0.7">
-          <text x="55" y="190">LDR + DHT</text>
-          <text x="160" y="190">RELE</text>
-        </g>
-      </g>
-    </svg>
-  );
-}
+

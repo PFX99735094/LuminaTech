@@ -13,10 +13,11 @@ Apresentar o SaaS, reter a atenção do professor da rede pública e demonstrar 
 * Card lateral com **foto real de um Arduino Uno R3** destacado (fonte: RobotShop CDN) — substitui o SVG schematic anterior. Badges "arduino · uno r3", "passo 3/4" e "↳ 47 bncc" mantidos.
 
 ### 2.2 Vitrine Curta (4 Projetos em Destaque)
-* Grid responsivo 1 → 2 → 4 colunas.
-* Cada card exibe: ilustração SVG, número do projeto, código BNCC curto, badge de dificuldade (cor dinâmica via `accent.deep` do projeto), título, subtítulo, descrição, duração, materiais e CTA "Ver código".
-* Cards com borda dupla em `ink-900`, sombra deslocada em violeta escuro (`#4C1D95`, estilo neo-brutalista) e efeito hover `-translate-y-1 + translate-x-[-2px]`.
-* Ordenação por dificuldade (Iniciante → Avançado) para criar uma trilha de aprendizado.
+* Grid responsivo 1 → 2 → 3 colunas no desktop (`sm:grid-cols-2 lg:grid-cols-3`).
+* Cada card em pé (`aspect-[4/5]`) exibe: imagem de capa, número do projeto, badge de dificuldade (Iniciante/Intermediário/Avançado com cor própria), título, subtítulo, descrição (2 linhas), duração com ícone e CTA "Ver código".
+* Cores de acento por projeto (cyan, violet, amber, lime, etc.) usadas no número, badge e gradiente do botão.
+* Cards com `rounded-2xl`, borda `ink-900/25`, hover `-translate-y-1.5` + `shadow-[0_15px_40px_rgba(0,0,0,0.35)]`.
+* Botão "Ver código" com gradiente dinâmico e `hover:scale-105`.
 * **Botão "Ver todos os N projetos"** abaixo do grid (bg violet-deep, hover cyan-spark), navegando para `/projetos`.
 
 ### 2.3 Catálogo Completo (`/projetos`)
@@ -24,7 +25,7 @@ Apresentar o SaaS, reter a atenção do professor da rede pública e demonstrar 
 * Hero próprio com a paleta de cores em pílulas e frase de impacto "N projetos prontos para a sua próxima aula".
 * **Barra de busca textual** com filtro por título, área BNCC e material.
 * **Filtro de dificuldade** em pílulas (Todos / Iniciante / Intermediário / Avançado) com estado visual ativo (fundo violet-deep + sombra cyan).
-* Grid 1 → 2 → 3 → 4 colunas reusando o mesmo componente `ProjectCard`.
+* Grid 1 → 2 → 3 colunas no desktop (`sm:grid-cols-2 lg:grid-cols-3`) reusando o mesmo componente `ProjectCard`.
 * Estado vazio com CTA "Limpar filtros" quando não há resultados.
 * Bloco final de upgrade (plano Escola, projetos sob medida).
 * Header próprio com botão "Voltar" para `/` e footer enxuto (bg gradient violet-deep → ink-900).
@@ -71,9 +72,9 @@ Apresentar o SaaS, reter a atenção do professor da rede pública e demonstrar 
 
 | Componente | Caminho | Uso |
 |---|---|---|
-| `ProjectCard` | `features/landing/components/ProjectCard.tsx` | Card padrão usado em vitrine e catálogo |
+| `ProjectCard` | `features/landing/components/ProjectCard.tsx` | Card padrão em pé (aspect-[4/5]), com imagem, badge de dificuldade, descrição, duração, botão com accent dinâmico |
 | `ProjectIllustration` | `features/landing/components/illustrations/ProjectIllustration.tsx` | SVG por chave (`IllustrationKey`) |
-| `accentMap` | `features/landing/components/ProjectCard.tsx` | Mapeia `AccentKey` → classes Tailwind (bg/text/ring/chip) |
+| `accentMap` | `features/landing/components/ProjectCard.tsx` | Mapeia `AccentKey` → cores inline (spark/deep) para badge, número e botão |
 | `TopNav`, `Footer` | `features/landing/components/` | Navegação com `Link` do `react-router-dom` para rotas internas |
 | `AdminPage` | `features/admin/pages/AdminPage.tsx` | Painel admin com 4 abas (Dashboard, Cadastro, Clientes, Projetos) |
 | `AdminLoginPage` | `features/admin/pages/AdminLoginPage.tsx` | Tela de login com nome + senha do admin |
@@ -90,7 +91,8 @@ Apresentar o SaaS, reter a atenção do professor da rede pública e demonstrar 
 * `duration`, `materials: string[]`
 * `bncc: BnccArea[]`, `bnccCode: string`
 * `illustration: IllustrationKey`
-* `accent: AccentKey` (amber, lime, cyan, rose, violet, teal, orange, fuchsia)
+* `accent: AccentKey` (amber, lime, cyan, rose, violet, teal, orange)
+* `cardImageUrl?`, `cardImageAlt?` — imagem de capa do card (se ausente, usa fallback via Unsplash)
 
 Adicionar projeto novo = 1 entrada em `data/projects.ts` + 1 caso no `ProjectIllustration`. Sem mexer em layout.
 
@@ -126,14 +128,13 @@ Direção estética: base fria (azul-noite) com acentos elétricos que evocam **
 **Acentos (par `spark` claro + `deep` escuro):**
 * `cyan` (`#22D3EE` / `#0E7490`) — **primária da marca** (CTA, brand mark, itálico)
 * `violet` (`#A78BFA` / `#6D28D9`) — neural
-* `fuchsia` (`#E879F9` / `#A21CAF`) — holograma
 * `lime` (`#A3E635` / `#4D7C0F`) — LED, OK, sucesso
 * `teal` (`#2DD4BF` / `#0F766E`) — data flow
 * `orange` (`#FB923C` / `#C2410C`) — robótica, energia
 * `amber` (`#FBBF24` / `#B45309`) — "tape label" sticker neo-brutalista, badges numerados
 * `rose` (`#FB7185` / `#BE123C`) — box de aviso, alerta
 
-8 acentos suportam até 8 cards distintos na vitrine (1 por projeto, sem repetição).
+7 acentos suportam até 7 cards distintos na vitrine (1 por projeto, sem repetição).
 
 **Onde cyan aparece como brand:**
 * Brand mark `Ateliê.<span text-cyan-spark>Robô` em TopNav, Footer, header de detalhe
@@ -154,7 +155,7 @@ Direção estética: base fria (azul-noite) com acentos elétricos que evocam **
 * MacOS-style window dots em CodeBlock/Hero
 * Pinos de LEDs em ilustrações que precisam do "amarelo quente" (e.g., semáforo)
 * Card de "passo 3/4" no Hero (badge rotacionado)
-* Os 8 acentos disponíveis no `ProjectCard` continuam disponíveis para os projetos; o lixeira pode seguir `amber` sem perder a coesão da marca — o brand é cyan, o tema de cada card é livre.
+* Os 7 acentos disponíveis no `ProjectCard` continuam disponíveis para os projetos; o lixeira pode seguir `amber` sem perder a coesão da marca — o brand é cyan, o tema de cada card é livre.
 
 ## 6. Roteamento
 * `react-router-dom` com `BrowserRouter` em `App.tsx`.
@@ -201,7 +202,7 @@ Se `wiringImage` não for definido, o `WiringDiagram` cai num placeholder "em de
 
 Definido em `tailwind.config.ts` nas chaves `keyframes`/`animation`: `fade-down`, `glow-pulse`, `logo-float`, `shimmer`.
 
-## 9. Autenticação do Admin
+## 9. Autenticação do Admin (independe de Supabase)
 
 * Implementação própria (não usa Supabase) em `context/AdminAuthContext.tsx`.
 * Credenciais fixas em constantes no topo do arquivo: `ADMIN_USERNAME` e `ADMIN_PASSWORD`.
@@ -213,10 +214,10 @@ Definido em `tailwind.config.ts` nas chaves `keyframes`/`animation`: `fade-down`
 * TopNav link para `/admin` — se não autenticado, redireciona para `/admin/login`.
 
 ## 10. Critérios de Sucesso (Pronto para Implantação)
-* Página `/` carrega em menos de 2 segundos; `/projetos` mantém a mesma performance com 8 cards.
-* Totalmente responsiva — grid colapsa 4 → 2 → 1 colunas, filtros quebram em duas linhas no mobile.
+* Página `/` carrega em menos de 2 segundos; `/projetos` mantém a mesma performance com 7 cards.
+* Totalmente responsiva — grid colapsa 3 → 2 → 1 colunas, filtros quebram em duas linhas no mobile.
 * `tsc --noEmit` e `vite build` passam sem warnings.
-* Adicionar um novo projeto não exige tocar em nenhum componente visual além do `ProjectIllustration` e do `data/projects.ts`.
+* Adicionar um novo projeto não exige tocar em nenhum componente visual além do `ProjectIllustration` e do `data/projects.ts` (se houver imagem de capa, basta definir `cardImageUrl`).
 * Adicionar/atualizar a foto de esquema de um projeto é só dropar o arquivo em `public/wiring/<projectId>.<ext>` e apontar `wiringImage` em `data/projectDetails.ts` — zero mudança no `WiringDiagram.tsx`.
 * Adicionar código novo a um projeto exige apenas 1 entrada em `data/projectDetails.ts`.
 * Busca e filtro por dificuldade respondem em tempo real (useMemo) sem flash de estado vazio.

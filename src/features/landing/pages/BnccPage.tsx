@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   ArrowLeft,
@@ -16,7 +16,7 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 import type { BnccArea, BnccPillar } from '../types';
-import { projects } from '../data/projects';
+import { fetchAllProjectsPublic } from '../data/projectsRepo';
 import { bnccCompetencies, bnccPillars } from '../data/bnccAreas';
 
 const iconMap: Record<BnccPillar['icon'], LucideIcon> = {
@@ -53,13 +53,29 @@ const accentText: Record<BnccPillar['accent'], string> = {
   fuchsia: 'text-fuchsia-deep',
 };
 
-function projectsForArea(area: BnccArea) {
-  return projects.filter((p) => p.bncc.includes(area));
+function useProjects() {
+  const [list, setList] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  useEffect(() => {
+    let cancelled = false;
+    async function load() {
+      try {
+        const data = await fetchAllProjectsPublic();
+        if (!cancelled) setList(data);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+    load();
+    return () => { cancelled = true; };
+  }, []);
+  return { list, loading };
 }
 
 export function BnccPage() {
   const [activeArea, setActiveArea] = useState<BnccArea | 'Todas'>('Todas');
   const [search, setSearch] = useState('');
+  const { list: projects, loading } = useProjects();
 
   const filteredAreas = useMemo(() => {
     const term = search.trim().toLowerCase();
@@ -183,7 +199,11 @@ export function BnccPage() {
 
         <section className="bg-paper-50 pb-20">
           <div className="mx-auto w-full max-w-7xl px-6 lg:px-10">
-            {filteredAreas.length === 0 ? (
+            {loading ? (
+              <div className="rounded-xl border-2 border-dashed border-ink-900/30 bg-paper-100/60 p-10 text-center font-mono text-sm text-ink-900/55">
+                Carregando projetos…
+              </div>
+            ) : filteredAreas.length === 0 ? (
               <div className="rounded-xl border-2 border-dashed border-ink-900/30 bg-paper-100/60 p-10 text-center font-mono text-sm text-ink-900/55">
                 Nenhuma área encontrada. Tente outro código ou termo.
               </div>
@@ -191,7 +211,7 @@ export function BnccPage() {
               <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
                 {filteredAreas.map((pillar) => {
                   const Icon = iconMap[pillar.icon];
-                  const usedBy = projectsForArea(pillar.area);
+                  const usedBy = projects.filter((p) => p.bncc.includes(pillar.area));
                   return (
                     <article
                       key={pillar.area}

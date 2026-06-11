@@ -1,7 +1,8 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 
-const ADMIN_USERNAME = 'Claudio';
-const ADMIN_PASSWORD = 'ana@2026';
+// Admin credentials are provided via environment variables to avoid hardcoding secrets
+const ADMIN_USERNAME = import.meta.env.VITE_ADMIN_USERNAME as string | undefined;
+const ADMIN_PASSWORD = import.meta.env.VITE_ADMIN_PASSWORD as string | undefined;
 const STORAGE_KEY = 'admin_auth';
 
 interface AdminUser {
@@ -41,6 +42,10 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
   const login = (name: string, password: string): string | null => {
     if (!name.trim()) return 'Digite o nome de administrador.';
     if (!password) return 'Digite a senha.';
+    // If env vars are not set, prevent login and guide configuration
+    if (!ADMIN_USERNAME || !ADMIN_PASSWORD) {
+      return 'Acesso admin não configurado. Defina VITE_ADMIN_USERNAME e VITE_ADMIN_PASSWORD no .env';
+    }
     if (name.trim() !== ADMIN_USERNAME || password !== ADMIN_PASSWORD) {
       return 'Nome ou senha inválidos.';
     }

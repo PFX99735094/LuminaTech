@@ -14,12 +14,10 @@ export type BnccArea =
 export type IllustrationKey =
   | 'lixeira'
   | 'carrinho'
-  | 'braco'
   | 'sensor'
   | 'semaforo'
   | 'jardim'
-  | 'piano'
-  | 'casa';
+  | 'piano';
 
 export type AccentKey =
   | 'amber'
@@ -28,22 +26,26 @@ export type AccentKey =
   | 'rose'
   | 'violet'
   | 'teal'
-  | 'orange'
-  | 'fuchsia';
+  | 'orange';
 
 export interface Project {
   id: string;
   title: string;
   subtitle: string;
   description: string;
-  difficulty: Difficulty;
+  // Nível de experiência (não utilizado mais na UI)
+  difficulty?: Difficulty;
   duration: string;
   materials: string[];
   bncc: BnccArea[];
   bnccCode: string;
   bnccCompetencies: string[];
   illustration: IllustrationKey;
-  accent: AccentKey;
+  // Cor de acento (não utilizada mais na UI dos cards)
+  accent?: AccentKey;
+  // Opcional: imagem de capa do card no catálogo (substitui a ilustração SVG quando presente)
+  cardImageUrl?: string;
+  cardImageAlt?: string;
 }
 
 export interface WiringConnection {
