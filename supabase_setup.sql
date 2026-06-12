@@ -135,3 +135,15 @@ INSERT INTO storage.buckets (id, name, public)
 -- 1) Public read admin-projects (SELECT): USING (bucket_id = 'admin-projects')
 -- 2) Public upload admin-projects (INSERT): WITH CHECK (bucket_id = 'admin-projects')
 -- 3) Public delete admin-projects (DELETE): USING (bucket_id = 'admin-projects')
+
+-- 7. Função RPC para excluir usuários (rodar com SECURITY DEFINER para poder deletar de auth.users)
+CREATE OR REPLACE FUNCTION public.delete_user_by_id(user_id UUID)
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+BEGIN
+  DELETE FROM auth.users WHERE id = user_id;
+END;
+$$;
+

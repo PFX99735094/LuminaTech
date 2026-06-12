@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Database, Mail, Phone, Building2, Search, User } from 'lucide-react';
+import { Database, Mail, Phone, Building2, Search, User, Trash2 } from 'lucide-react';
 import type { Client } from '../types';
 
 const planStyles: Record<string, string> = {
@@ -13,6 +13,35 @@ export function ListaClientes() {
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  const handleDelete = async (id: string, name: string) => {
+    if (!window.confirm(`Tem certeza que deseja excluir permanentemente o cliente "${name}"?`)) {
+      return;
+    }
+
+    setDeletingId(id);
+    try {
+      const { supabase } = await import('../../../lib/supabaseClient');
+      const { error: rpcError } = await supabase.rpc('delete_user_by_id', { user_id: id });
+
+      if (rpcError) {
+        throw new Error(rpcError.message);
+      }
+
+      setClients((prev) => prev.filter((c) => c.id !== id));
+      alert(`Cliente "${name}" excluído com sucesso!`);
+    } catch (err) {
+      console.error(err);
+      alert(
+        err instanceof Error
+          ? `Erro ao excluir: ${err.message}`
+          : 'Erro ao excluir o cliente. Verifique se a função RPC delete_user_by_id está instalada no Supabase.'
+      );
+    } finally {
+      setDeletingId(null);
+    }
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -133,12 +162,13 @@ export function ListaClientes() {
                   <th className="px-4 py-3 font-bold">Escola</th>
                   <th className="px-4 py-3 font-bold">Plano</th>
                   <th className="px-4 py-3 font-bold">Cadastro</th>
+                  <th className="px-4 py-3 font-bold text-center">Ações</th>
                 </tr>
               </thead>
               <tbody>
                 {filtered.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="px-4 py-10 text-center text-ink-900/45">
+                    <td colSpan={7} className="px-4 py-10 text-center text-ink-900/45">
                       {search
                         ? 'Nenhum cliente encontrado para esta busca.'
                         : 'Nenhum cliente cadastrado ainda.'}
@@ -191,6 +221,20 @@ export function ListaClientes() {
                       </td>
                       <td className="px-4 py-3 font-mono text-[10.5px] text-ink-900/55">
                         {new Date(client.registeredAt).toLocaleDateString('pt-BR')}
+                      </td>
+                      <td className="px-4 py-3 text-center">
+                        <button
+                          onClick={() => handleDelete(client.id, client.name)}
+                          disabled={deletingId === client.id}
+                          className="inline-flex items-center justify-center rounded-md border-2 border-ink-900 bg-paper-50 p-1.5 text-rose-deep hover:bg-rose-pulse hover:text-paper-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                          title="Excluir Cliente"
+                        >
+                          {deletingId === client.id ? (
+                            <div className="h-4 w-4 animate-spin rounded-full border-2 border-rose-deep border-t-transparent" />
+                          ) : (
+                            <Trash2 className="h-4 w-4" strokeWidth={2.25} />
+                          )}
+                        </button>
                       </td>
                     </tr>
                   ))
